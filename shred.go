@@ -44,7 +44,7 @@ func (conf Conf) Dir(path string) error {
 		stats, _ := os.Stat(path)
 
 		if stats.IsDir() == false {
-			conf.File(path)
+			go conf.File(path)
 		}
 		return nil
 	})
