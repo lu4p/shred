@@ -3,15 +3,14 @@
 # shred
 This is a golang libary to mimic the functionallity of the linux ```shred``` command
 ## Usage
-
+```golang
 package main
 import (
-  "fmt"
   "github.com/lu4p/shred"
 )
-"golang" ```
+
 func main(){
-      conf := shred.Conf{Times: 1, Zeros: true, Remove: false}
-			err := shredconf.Path("filename")
+	shredconf := shred.Conf{Times: 1, Zeros: true, Remove: false}
+	shredconf.Path("filename")
 }
 ```
