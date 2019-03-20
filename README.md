@@ -9,7 +9,7 @@ import (
   "fmt"
   "github.com/lu4p/shred"
 )
-```"golang"
+"golang" ```
 func main(){
       conf := shred.Conf{Times: 1, Zeros: true, Remove: false}
 			err := shredconf.Path("filename")
