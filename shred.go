@@ -4,7 +4,10 @@ import (
 	"crypto/rand"
 	"os"
 	"path/filepath"
+	"sync"
 )
+
+var wg sync.WaitGroup
 
 // Conf is a object containing all choices of the user
 type Conf struct {
@@ -44,7 +47,9 @@ func (conf Conf) Dir(path string) error {
 		stats, _ := os.Stat(path)
 
 		if stats.IsDir() == false {
+			wg.Add(1)
 			go conf.File(path)
+			wg.Wait()
 		}
 		return nil
 	})
@@ -72,6 +77,7 @@ func (conf Conf) File(path string) error {
 			return err
 		}
 	}
+	wg.Done()
 	return nil
 }
 
