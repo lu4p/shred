@@ -1,4 +1,4 @@
-// Package shred is a golang library to mimic the functionallity of the linux shred command
+// Package shred is a golang library to mimic the functionality of the linux shred command
 package shred
 
 import (
