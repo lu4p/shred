@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/github/license/lu4p/shred.svg)](https://unlicense.org/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lu4p/shred)](https://goreportcard.com/report/github.com/lu4p/shred)
 # shred
- Package shred is a golang library to mimic the functionality of the linux shred command
+ Package shred is a golang library to mimic the functionality of the linux `shred` command
  
  ## Usage
 ```golang
