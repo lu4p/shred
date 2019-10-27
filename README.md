@@ -1,5 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/lu4p/shred?status.svg)](https://godoc.org/github.com/lu4p/shred)
 [![License](https://img.shields.io/github/license/lu4p/shred.svg)](https://unlicense.org/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lu4p/shred)](https://goreportcard.com/report/github.com/lu4p/shred)
 # shred
 This is a golang libary to mimic the functionallity of the linux ```shred``` command
 ## Usage
