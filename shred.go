@@ -47,7 +47,7 @@ func (conf Conf) Dir(path string) error {
 		}
 		stats, _ := os.Stat(path)
 
-		if stats.IsDir() == false {
+		if !stats.IsDir() {
 			wg.Add(1)
 			go conf.File(path)
 			wg.Wait()
@@ -87,17 +87,23 @@ func (conf Conf) File(path string) error {
 func (conf Conf) WriteRandom(path string, size int64) error {
 	for i := 0; i < conf.Times; i++ {
 		file, err := os.OpenFile(path, os.O_RDWR, 0)
-		defer file.Close()
 		if err != nil {
 			return err
 		}
+		defer file.Close()
 		offset, err := file.Seek(0, 0)
 		if err != nil {
 			return err
 		}
 		buff := make([]byte, size)
-		rand.Read(buff)
-		file.WriteAt(buff, offset)
+		_, err = rand.Read(buff)
+		if err != nil {
+			return err
+		}
+		_, err = file.WriteAt(buff, offset)
+		if err != nil {
+			return err
+		}
 		file.Close()
 	}
 	return nil
@@ -105,20 +111,21 @@ func (conf Conf) WriteRandom(path string, size int64) error {
 
 // WriteZeros overwrites a File with zeros if conf.Zeros == true
 func (conf Conf) WriteZeros(path string, size int64) error {
-	if conf.Zeros == false {
+	if !conf.Zeros {
 		return nil
 	}
+
 	file, err := os.OpenFile(path, os.O_RDWR, 0)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
 
+	defer file.Close()
 	offset, err := file.Seek(0, 0)
 	if err != nil {
 		return err
 	}
 	buff := make([]byte, size)
-	file.WriteAt(buff, offset)
-	return nil
+	_, err = file.WriteAt(buff, offset)
+	return err
 }
