@@ -50,10 +50,10 @@ func (conf Conf) Dir(path string) error {
 		if !stats.IsDir() {
 			wg.Add(1)
 			go conf.File(path)
-			wg.Wait()
 		}
 		return nil
 	})
+	wg.Wait()
 	return err
 }
 
