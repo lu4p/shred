@@ -48,7 +48,6 @@ func (conf Conf) Dir(path string) error {
 		stats, _ := os.Stat(path)
 
 		if !stats.IsDir() {
-			wg.Add(1)
 			go conf.File(path)
 		}
 		return nil
@@ -59,6 +58,8 @@ func (conf Conf) Dir(path string) error {
 
 // File overwrites a given File in the location of path
 func (conf Conf) File(path string) error {
+	wg.Add(1)
+	defer wg.Done()
 	fileinfo, err := os.Stat(path)
 	if err != nil {
 		return err
@@ -78,7 +79,7 @@ func (conf Conf) File(path string) error {
 			return err
 		}
 	}
-	wg.Done()
+
 	return nil
 }
 
