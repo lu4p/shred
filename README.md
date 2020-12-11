@@ -16,3 +16,8 @@ func main(){
 	shredconf.Path("filename")
 }
 ```
+
+## Installation
+```
+go get -u github.com/lu4p/shred 
+```
