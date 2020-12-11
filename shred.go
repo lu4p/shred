@@ -5,10 +5,7 @@ import (
 	"crypto/rand"
 	"os"
 	"path/filepath"
-	"sync"
 )
-
-var wg sync.WaitGroup
 
 // Conf is a object containing all choices of the user
 type Conf struct {
@@ -20,113 +17,99 @@ type Conf struct {
 // Path shreds all files in the location of path
 // recursively. If remove is set to true files will be deleted
 // after shredding. When a file is shredded its content
-// is NOT recoverable so !!USE WITH CAUTION!!
+// is NOT recoverable so USE WITH CAUTION!!!
 func (conf Conf) Path(path string) error {
 	stats, err := os.Stat(path)
 	if err != nil {
 		return err
-	} else if stats.IsDir() {
-		err := conf.Dir(path)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := conf.File(path)
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+
+	if stats.IsDir() {
+		return conf.Dir(path)
+	}
+
+	return conf.File(path)
 }
 
 // Dir overwrites every File in the location of path and everything in its subdirectories
 func (conf Conf) Dir(path string) error {
-	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	var chErrors []chan error
+
+	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		stats, _ := os.Stat(path)
 
-		if !stats.IsDir() {
-			go conf.File(path)
+		if info.IsDir() {
+			return nil
 		}
+
+		chErr := make(chan error)
+		chErrors = append(chErrors, chErr)
+		go func() {
+			err := conf.File(path)
+			chErr <- err
+		}()
+
 		return nil
-	})
-	wg.Wait()
-	return err
+	}
+
+	if err := filepath.Walk(path, walkFn); err != nil {
+		return err
+	}
+
+	for _, chErr := range chErrors {
+		if err := <-chErr; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // File overwrites a given File in the location of path
 func (conf Conf) File(path string) error {
-	wg.Add(1)
-	defer wg.Done()
-	fileinfo, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-	size := fileinfo.Size()
-	err = conf.WriteRandom(path, size)
-	if err != nil {
-		return err
-	}
-	err = conf.WriteZeros(path, size)
-	if err != nil {
-		return err
-	}
-	if conf.Remove {
-		err := os.Remove(path)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// WriteRandom overwrites a File with random stuff.
-// conf.Times specifies how many times the file should be overwritten
-func (conf Conf) WriteRandom(path string, size int64) error {
 	for i := 0; i < conf.Times; i++ {
-		file, err := os.OpenFile(path, os.O_RDWR, 0)
-		if err != nil {
+		if err := overwriteFile(path, true); err != nil {
 			return err
 		}
-		defer file.Close()
-		offset, err := file.Seek(0, 0)
-		if err != nil {
-			return err
-		}
-		buff := make([]byte, size)
-		_, err = rand.Read(buff)
-		if err != nil {
-			return err
-		}
-		_, err = file.WriteAt(buff, offset)
-		if err != nil {
-			return err
-		}
-		file.Close()
 	}
+
+	if conf.Zeros {
+		if err := overwriteFile(path, false); err != nil {
+			return err
+		}
+	}
+
+	if conf.Remove {
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-// WriteZeros overwrites a File with zeros if conf.Zeros == true
-func (conf Conf) WriteZeros(path string, size int64) error {
-	if !conf.Zeros {
-		return nil
-	}
-
-	file, err := os.OpenFile(path, os.O_RDWR, 0)
+func overwriteFile(path string, random bool) error {
+	f, err := os.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
-	offset, err := file.Seek(0, 0)
+	defer f.Close()
+
+	info, err := f.Stat()
 	if err != nil {
 		return err
 	}
-	buff := make([]byte, size)
-	_, err = file.WriteAt(buff, offset)
+
+	buff := make([]byte, info.Size())
+	if random {
+		if _, err := rand.Read(buff); err != nil {
+			return err
+		}
+	}
+
+	_, err = f.WriteAt(buff, 0)
 	return err
 }
